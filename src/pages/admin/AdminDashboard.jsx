@@ -7,6 +7,7 @@ import {
   Bell, Settings, AlertTriangle, CheckCircle2, Clock,
   TrendingUp, MapPin, Activity, ArrowUpRight, Zap, Globe
 } from 'lucide-react'
+import { useAdminStats } from '../../hooks/useAdminStats'
 import {
   AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend
@@ -66,6 +67,8 @@ const recentActivity = [
 const statusStyle = { success: 'text-accent-600', warning: 'text-yellow-600', danger: 'text-red-500', info: 'text-primary-600' }
 
 export default function AdminDashboard() {
+  const { stats, loading: statsLoading } = useAdminStats()
+
   return (
     <DashboardLayout sidebarItems={sidebarItems} role="admin" title="State Administrator Dashboard">
       <div className="max-w-7xl mx-auto space-y-6">
@@ -73,7 +76,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-slate-900">State Overview</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Tamil Nadu Legal Metrology Department · September 2026</p>
+            <p className="text-sm text-slate-500 mt-0.5">Tamil Nadu Legal Metrology Department · {new Date().toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })}</p>
           </div>
           <div className="flex items-center gap-2 bg-accent-50 border border-accent-200 rounded-xl px-4 py-2">
             <Activity size={14} className="text-accent-600" />
@@ -83,10 +86,10 @@ export default function AdminDashboard() {
 
         {/* Stat cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Total Instruments" value="2,400" icon={Scale} color="primary" trend={5.2} trendLabel="this month" />
-          <StatCard label="Valid Certificates" value="1,842" icon={CheckCircle2} color="accent" trend={3.1} trendLabel="vs last month" />
-          <StatCard label="Pending Applications" value="118" icon={Clock} color="warning" trend={-8} trendLabel="vs last week" />
-          <StatCard label="Expired Instruments" value="156" icon={AlertTriangle} color="danger" trend={-2.4} trendLabel="vs last month" />
+          <StatCard label="Total Instruments"   value={statsLoading ? '…' : (stats?.totalInstruments ?? 0).toLocaleString()} icon={Scale}        color="primary" />
+          <StatCard label="Valid Certificates"  value={statsLoading ? '…' : (stats?.validInstruments ?? 0).toLocaleString()}  icon={CheckCircle2} color="accent" />
+          <StatCard label="Pending Applications"value={statsLoading ? '…' : (stats?.pendingApplications ?? 0).toString()}     icon={Clock}        color="warning" />
+          <StatCard label="Expired Instruments" value={statsLoading ? '…' : (stats?.expiredInstruments ?? 0).toString()}       icon={AlertTriangle}color="danger" />
         </div>
 
         {/* Charts row */}
