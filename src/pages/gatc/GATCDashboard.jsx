@@ -1,7 +1,10 @@
 import { Link } from 'react-router-dom'
 import DashboardLayout from '../../components/layout/DashboardLayout'
 import StatCard from '../../components/ui/StatCard'
-import Badge from '../../components/ui/Badge'
+import { InlineLoader } from '../../components/ui/LoadingSpinner'
+import { useApplicationQueue } from '../../hooks/useApplications'
+import { useIssuedCertificates } from '../../hooks/useCertificates'
+import { useAuth } from '../../context/AuthContext'
 import {
   LayoutDashboard, Scale, ClipboardList, QrCode,
   Bell, BarChart3, Calendar, CheckCircle2,
@@ -11,33 +14,26 @@ import {
 
 export const gatcSidebarItems = [
   { label: 'Main', links: [
-    { to: '/gatc',              label: 'Dashboard',          icon: LayoutDashboard },
-    { to: '/gatc/queue',        label: 'Inspection Queue',   icon: ClipboardList, badge: '5' },
-    { to: '/gatc/schedule',     label: 'Inspection Schedule',icon: Calendar },
-    { to: '/gatc/instruments',  label: 'Instruments',        icon: Scale },
+    { to: '/gatc',              label: 'Dashboard',           icon: LayoutDashboard },
+    { to: '/gatc/queue',        label: 'Inspection Queue',    icon: ClipboardList },
+    { to: '/gatc/schedule',     label: 'Inspection Schedule', icon: Calendar },
+    { to: '/gatc/instruments',  label: 'Instruments',         icon: Scale },
   ]},
   { label: 'Certificates', links: [
-    { to: '/gatc/issued',       label: 'Issued Certificates',icon: QrCode },
-    { to: '/gatc/reports',      label: 'Reports',            icon: BarChart3 },
-    { to: '/gatc/notifications',label: 'Notifications',      icon: Bell, badge: '2' },
+    { to: '/gatc/issued',        label: 'Issued Certificates', icon: QrCode },
+    { to: '/gatc/reports',       label: 'Reports',             icon: BarChart3 },
+    { to: '/gatc/notifications', label: 'Notifications',       icon: Bell },
   ]},
 ]
 
-const queue = [
-  { id: 'APP-2026-0442', owner: 'Kiran Auto Parts', instrument: 'Platform Scale 500kg', type: 'physical', priority: 'high', received: '1h ago', district: 'Chennai' },
-  { id: 'APP-2026-0438', owner: 'Metro Grains Ltd.', instrument: 'Weighbridge 25T', type: 'physical', priority: 'high', received: '3h ago', district: 'Kancheepuram' },
-  { id: 'APP-2026-0431', owner: 'Sai Medical Stores', instrument: 'Analytical Balance', type: 'physical', priority: 'medium', received: '5h ago', district: 'Chennai' },
-  { id: 'APP-2026-0427', owner: 'Fresh Produce Hub', instrument: 'Counter Scale 10kg', type: 'physical', priority: 'low', received: '1d ago', district: 'Tiruvallur' },
-  { id: 'APP-2026-0420', owner: 'Lakshmi Rice Mill', instrument: 'Bulk Weigher', type: 'physical', priority: 'medium', received: '1d ago', district: 'Chengalpet' },
-]
-
-const priorityMap = {
-  high:   { label: 'High',   variant: 'danger'  },
-  medium: { label: 'Medium', variant: 'warning' },
-  low:    { label: 'Low',    variant: 'neutral' },
-}
-
 export default function GATCDashboard() {
+  const { profile } = useAuth()
+  const { queue, loading: qLoad }        = useApplicationQueue('physical')
+  const { certificates, loading: cLoad } = useIssuedCertificates()
+
+  const pending   = queue.filter(a => ['submitted','under_review'].includes(a.status)).length
+  const escalated = queue.filter(a => a.status === 'escalated').length
+
   return (
     <DashboardLayout sidebarItems={gatcSidebarItems} role="gatc" title="GATC Dashboard">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -46,7 +42,9 @@ export default function GATCDashboard() {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
             <h2 className="text-xl font-bold text-slate-900">GATC Operations Dashboard</h2>
-            <p className="text-sm text-slate-500 mt-0.5">Government Approved Test Centre — Chennai &nbsp;·&nbsp; Tamil Nadu</p>
+            <p className="text-sm text-slate-500 mt-0.5">
+            Government Approved Test Centre &nbsp;·&nbsp; {profile?.organisation || profile?.state || 'GATC'}
+          </p>
           </div>
           <div className="flex items-center gap-2 bg-teal-50 border border-teal-200 rounded-xl px-4 py-2">
             <ShieldCheck size={14} className="text-teal-600" />
@@ -56,10 +54,10 @@ export default function GATCDashboard() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard label="Pending Inspections" value="5"  icon={Clock}        color="warning" sub="In queue" />
-          <StatCard label="Completed Today"     value="3"  icon={CheckCircle2} color="accent"  trend={0} trendLabel="vs yesterday" />
-          <StatCard label="Certs Issued (Month)"value="38" icon={ShieldCheck}  color="primary" trend={6} trendLabel="vs last month" />
-          <StatCard label="Escalated"           value="1"  icon={AlertTriangle}color="danger" />
+          <StatCard label="Pending Inspections" value={qLoad ? '…' : pending}              icon={Clock}        color="warning" sub="In queue" />
+          <StatCard label="Certs Issued"        value={cLoad ? '…' : certificates.length}  icon={ShieldCheck}  color="primary" />
+          <StatCard label="Escalated"           value={qLoad ? '…' : escalated}            icon={AlertTriangle}color="danger" />
+          <StatCard label="Total in Queue"      value={qLoad ? '…' : queue.length}         icon={CheckCircle2} color="accent" />
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
@@ -72,32 +70,47 @@ export default function GATCDashboard() {
               </Link>
             </div>
             <div className="divide-y divide-slate-50">
-              {queue.map((app) => (
-                <div key={app.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors group">
-                  <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
-                    <Scale size={16} className="text-teal-600" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="text-sm font-semibold text-slate-800 truncate">{app.instrument}</p>
-                      <Badge variant={priorityMap[app.priority].variant} className="text-[10px]">
-                        {priorityMap[app.priority].label}
-                      </Badge>
+              {qLoad
+                ? <InlineLoader text="Loading queue…" />
+                : queue.length === 0
+                  ? (
+                    <div className="py-10 text-center text-slate-400">
+                      <CheckCircle2 size={28} className="mx-auto mb-2 opacity-40" />
+                      <p className="text-sm">No pending inspections.</p>
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      <span className="text-xs text-slate-400 flex items-center gap-1"><User size={10} />{app.owner}</span>
-                      <span className="text-xs text-slate-400 flex items-center gap-1"><MapPin size={10} />{app.district}</span>
+                  )
+                  : queue.slice(0, 5).map(app => (
+                    <div key={app.id} className="flex items-center gap-4 px-6 py-3.5 hover:bg-slate-50 transition-colors group">
+                      <div className="w-9 h-9 rounded-xl bg-teal-50 flex items-center justify-center shrink-0">
+                        <Scale size={16} className="text-teal-600" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-slate-800 truncate">
+                          {app.instrument_name || 'Instrument'}
+                        </p>
+                        <div className="flex items-center gap-3 mt-0.5">
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <User size={10} />{app.applicant_name || '—'}
+                          </span>
+                          <span className="text-xs text-slate-400 flex items-center gap-1">
+                            <MapPin size={10} />{app.instrument_district || '—'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <span className="text-[10px] text-slate-400">
+                          {app.submitted_at ? new Date(app.submitted_at).toLocaleDateString('en-IN') : '—'}
+                        </span>
+                        <Link to={`/gatc/review/${app.id}`}
+                          className="flex items-center gap-1 text-xs font-semibold text-primary-600
+                            border border-primary-200 px-2.5 py-1.5 rounded-lg hover:bg-primary-50
+                            transition-colors">
+                          <Eye size={12} /> Review
+                        </Link>
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-[10px] text-slate-400">{app.received}</span>
-                    <Link to={`/gatc/review/${app.id}`}
-                      className="flex items-center gap-1 text-xs font-semibold text-primary-600 border border-primary-200 px-2.5 py-1.5 rounded-lg hover:bg-primary-50 transition-colors">
-                      <Eye size={12} /> Review
-                    </Link>
-                  </div>
-                </div>
-              ))}
+                  ))
+              }
             </div>
           </div>
 
