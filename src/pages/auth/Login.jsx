@@ -34,8 +34,7 @@ export default function Login() {
     setError('')
     setLoading(true)
     try {
-      await signIn({ email: form.email, password: form.password })
-      // AuthContext will have set profile.role after signIn
+      await signIn({ email: form.email, password: form.password, role: selectedRole })
       const routes = { merchant: '/merchant', officer: '/officer', gatc: '/gatc', admin: '/admin' }
       navigate(routes[selectedRole] || '/merchant')
     } catch (err) {
@@ -162,6 +161,14 @@ export default function Login() {
             Don't have an account?{' '}
             <Link to="/register" className="text-blue-600 font-medium hover:underline">Register here</Link>
           </p>
+
+          {/* Demo mode hint — shown when Supabase isn't configured */}
+          <div className="mt-4 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+            <p className="text-xs text-blue-700 text-center">
+              <span className="font-semibold">Demo mode:</span> Select any role above and click Sign In —
+              no real credentials needed. The app runs fully offline.
+            </p>
+          </div>
         </div>
       </div>
     </div>

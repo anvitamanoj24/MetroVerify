@@ -243,6 +243,12 @@ export default function Register() {
           Already registered?{' '}
           <Link to="/login" className="text-blue-600 font-medium hover:underline">Sign in</Link>
         </p>
+        <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-xl">
+          <p className="text-xs text-blue-700 text-center">
+            <span className="font-semibold">Demo mode:</span> Fill in any details and click Create Account —
+            no email verification or real database needed.
+          </p>
+        </div>
       </div>
     </div>
   )
