@@ -1,5 +1,6 @@
 import { Link, useParams } from 'react-router-dom'
 import Badge from '../../components/ui/Badge'
+import { AuditTrail, StatusBanner } from '../../components/passport/DigitalPassportTimeline'
 import {
   Scale, QrCode, ShieldCheck, Clock, AlertTriangle,
   CheckCircle2, ArrowLeft, Download, Share2,
@@ -87,6 +88,8 @@ export default function InstrumentPassport() {
         </div>
 
         {/* Current certificate + validity */}
+        <StatusBanner status="valid" className="max-w-5xl" />
+
         <div className="grid md:grid-cols-2 gap-5">
           <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
             <h3 className="font-semibold text-slate-800 text-sm mb-4">Current Verification</h3>
@@ -145,37 +148,22 @@ export default function InstrumentPassport() {
           </div>
         </div>
 
-        {/* Verification History */}
+        {/* Verification History — Audit Trail */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm">
           <div className="px-6 py-4 border-b border-slate-100 flex items-center gap-2">
             <Activity size={16} className="text-primary-600" />
-            <h3 className="font-semibold text-slate-800">Verification History</h3>
+            <h3 className="font-semibold text-slate-800">Instrument Lifecycle Audit Trail</h3>
           </div>
-          <div className="divide-y divide-slate-50">
-            {history.map((h, i) => (
-              <div key={i} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors group">
-                <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${i === 0 ? 'bg-accent-50' : 'bg-slate-100'}`}>
-                  <CheckCircle2 size={16} className={i === 0 ? 'text-accent-600' : 'text-slate-400'} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-semibold text-slate-800">{h.action}</span>
-                    {i === 0 && <Badge variant="success" className="text-[10px]">Current</Badge>}
-                    <span className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${h.method === 'Digital' ? 'bg-primary-50 text-primary-600' : 'bg-slate-100 text-slate-500'}`}>{h.method}</span>
-                  </div>
-                  <div className="flex items-center gap-3 mt-0.5">
-                    <span className="text-xs text-slate-400 flex items-center gap-1"><Calendar size={10} />{h.date}</span>
-                    <span className="text-xs text-slate-400 flex items-center gap-1"><User size={10} />{h.officer}</span>
-                  </div>
-                </div>
-                <div className="text-right shrink-0">
-                  <p className="text-xs font-mono text-primary-600">{h.cert}</p>
-                  <button className="text-[10px] text-slate-400 hover:text-slate-600 mt-0.5 flex items-center gap-1 ml-auto">
-                    <ExternalLink size={9} /> View cert
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="px-6 py-5">
+            <AuditTrail
+              title=""
+              events={[
+                { step: 'Certificate Issued — MV-2026-TN-004521', date: 'Sep 10, 2026', actor: 'Insp. Priya Sharma, Chennai Division', note: 'Digital verification approved. QR certificate activated.' },
+                { step: 'Re-verification — MV-2023-TN-002104',    date: 'Sep 5, 2023',  actor: 'Insp. Suresh M., Chennai Division' },
+                { step: 'Initial Verification — MV-2020-TN-000891', date: 'Aug 28, 2020', actor: 'Insp. Kumar R., Chennai Division' },
+                { step: 'Instrument Registered',                  date: 'Aug 25, 2020',  actor: 'Rajesh Kumar (Owner)' },
+              ]}
+            />
           </div>
         </div>
 

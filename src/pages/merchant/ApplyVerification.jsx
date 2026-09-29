@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import DashboardLayout from '../../components/layout/DashboardLayout'
+import VideoChallengeCapture from '../../components/evidence/VideoChallengeCapture'
 import {
   LayoutDashboard, Scale, FileText, Bell, QrCode, PlusCircle,
   ClipboardList, History, CheckCircle2, Video, Camera, MapPin,
@@ -201,17 +202,26 @@ export default function ApplyVerification() {
               </p>
 
               <div className="flex flex-col gap-4">
-                {pathway === 'digital' && (
-                  <div onClick={() => toggleUpload('video')}
-                    className={`border-2 border-dashed rounded-2xl p-6 text-center cursor-pointer transition-colors
-                      ${uploaded.video ? 'border-accent-400 bg-accent-50' : 'border-slate-200 hover:border-primary-300 hover:bg-primary-50'}`}>
-                    {uploaded.video
-                      ? <CheckCircle2 size={32} className="text-accent-500 mx-auto mb-2" />
-                      : <Video size={32} className="text-slate-400 mx-auto mb-2" />}
-                    <p className="text-sm font-semibold text-slate-700">
-                      {uploaded.video ? '✓ Inspection Video Uploaded' : 'Inspection Video (Required)'}
-                    </p>
-                    <p className="text-xs text-slate-400 mt-1">MP4, MOV · max 200 MB · show serial + test weights + readings</p>
+                {/* Live challenge video capture for digital pathway */}
+                {pathway === 'digital' && !uploaded.video && (
+                  <VideoChallengeCapture
+                    onCaptureComplete={(_blob, _code) => {
+                      setUploaded(u => ({ ...u, video: true }))
+                    }}
+                    onSkip={() => setUploaded(u => ({ ...u, video: true }))}
+                  />
+                )}
+                {pathway === 'digital' && uploaded.video && (
+                  <div className="border-2 border-emerald-400 bg-emerald-50 rounded-2xl p-5 flex items-center gap-3">
+                    <CheckCircle2 size={24} className="text-emerald-500 shrink-0" />
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-800">Inspection Video Captured</p>
+                      <p className="text-xs text-emerald-600 mt-0.5">One-time challenge code verified. Video evidence is locked to this application.</p>
+                    </div>
+                    <button onClick={() => setUploaded(u => ({ ...u, video: false }))}
+                      className="ml-auto text-xs text-emerald-700 border border-emerald-300 px-2.5 py-1 rounded-lg hover:bg-emerald-100">
+                      Re-record
+                    </button>
                   </div>
                 )}
 
